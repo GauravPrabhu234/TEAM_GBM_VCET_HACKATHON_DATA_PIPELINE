@@ -8,15 +8,12 @@ from sklearn.linear_model import LinearRegression
 
 # === CONFIGURATION ===
 PERSON_1_IP = "192.168.137.108"
-# CRITICAL: Get this token from your team chat. It's the same one Person 3 used.
 INFLUX_API_TOKEN = "eQqsK0quoaIUeQFfVYqxTYHq1zBiseK2LCx7o0NX_wc_0Y0vwqk1SeR3svrEWXg8_jH77zRko97I4eEaL-zI7w==" 
-
 INFLUX_URL = f"http://{PERSON_1_IP}:8086"
 INFLUX_ORG = "hackathon_org"
 INFLUX_BUCKET = "iot_bucket"
 
 # === CLIENT INITIALIZATION ===
-# This section connects to the InfluxDB database.
 try:
     influx_client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_API_TOKEN, org=INFLUX_ORG)
     query_api = influx_client.query_api()
@@ -30,7 +27,7 @@ def predict_failures():
     """This function queries data, builds a model for each device, and predicts its future temperature."""
     print("\n--- Running Prediction Cycle ---")
 
-    # This Flux query grabs the last 20 minutes of temperature data for more robustness.
+    # This Flux query grabs the last 20 minutes of temperature data
     query = f'''
         from(bucket: "{INFLUX_BUCKET}")
           |> range(start: -20m) 
@@ -39,69 +36,76 @@ def predict_failures():
     '''
 
     try:
-        # The result can be a DataFrame, an empty list, or a list containing DataFrames.
         result = query_api.query_data_frame(query=query, org=INFLUX_ORG)
 
-        df = None
         if isinstance(result, list):
             if not result:
-                print("No recent temperature data found to build model (empty list received). Skipping.")
+                print("No recent temperature data found to build model. Skipping.")
                 return
-            else:
-                df = result[0]
+            df = pd.concat(result, ignore_index=True)
         else:
             df = result
 
         if df.empty:
-            print("No recent temperature data found to build model (empty dataframe received). Skipping.")
+            print("No recent temperature data found to build model. Skipping.")
             return
 
     except Exception as e:
         print(f"Error querying data: {e}")
         return
 
+    # Loop through each device
     for device_id in df.columns:
         if device_id in ['result', 'table', '_start', '_stop', '_time']:
             continue
 
-        device_df = df[['_time', device_id]].copy()
-        device_df = device_df.dropna()
-
+        device_df = df[['_time', device_id]].copy().dropna()
         device_df[device_id] = pd.to_numeric(device_df[device_id], errors='coerce')
         device_df = device_df.dropna()
 
         if len(device_df) < 5:
             continue
 
+        # Prepare features
         X = device_df['_time'].apply(lambda t: t.timestamp()).values.reshape(-1, 1)
         y = device_df[device_id].values
 
+        # Train regression model
         model = LinearRegression()
         model.fit(X, y)
 
-        # --- IMPROVED: Fixes the DeprecationWarning ---
+        # Predict 5 minutes into the future
         future_timestamp = (datetime.now(timezone.utc) + timedelta(minutes=5)).timestamp()
         predicted_temp = model.predict([[future_timestamp]])[0]
 
-        print(f"Device: {device_id} | Current Temp: {y[-1]:.2f}°C | Raw Predicted Temp in 5 mins: {predicted_temp:.2f}°C")
+        print(f"Device: {device_id} | Current Temp: {y[-1]:.2f}°C | Predicted Temp in 5 mins: {predicted_temp:.2f}°C")
 
-        # --- NEW: Prediction Sanity Check ---
-        # We check if the prediction is physically plausible. A real-world system would never be below freezing or absurdly hot.
+        # --- Prediction categorization ---
         if 0 < predicted_temp < 500:
-            if predicted_temp > 100.0:
-                print(f"  -> 🚨 PREDICTION (VALID): {device_id} is predicted to overheat!")
-                point = Point("failure_predictions") \
-                    .tag("device_id", device_id) \
-                    .field("predicted_temp", predicted_temp)
+            if predicted_temp <= 75:
+                status = "normal"
+                print(f"  -> ✅ PREDICTION (NORMAL): {device_id} is safe at {predicted_temp:.2f}°C")
+            elif predicted_temp <= 100:
+                status = "critical"
+                print(f"  -> ⚠ PREDICTION (CRITICAL): {device_id} is high at {predicted_temp:.2f}°C")
+            else:
+                status = "overheat"
+                print(f"  -> 🚨 PREDICTION (OVERHEAT): {device_id} will overheat at {predicted_temp:.2f}°C")
 
-                write_api.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=point)
-                print(f"  -> ✅ Wrote prediction to InfluxDB.")
+            # Write prediction to InfluxDB
+            point = (
+                Point("failure_predictions")
+                .tag("device_id", device_id)
+                .field("predicted_temp", float(predicted_temp))
+                .field("status", status)
+            )
+            write_api.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=point)
+            print(f"  -> ✅ Wrote prediction to InfluxDB.")
         else:
             print(f"  -> ⚠ Prediction for {device_id} is unrealistic. Discarding.")
-
 
 # --- MAIN LOOP ---
 while True:
     predict_failures()
-    print(f"\nSleeping for 1 minutes before next prediction cycle...")
+    print(f"\nSleeping for 1 minute before next prediction cycle...")
     time.sleep(60)
