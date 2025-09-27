@@ -3,8 +3,8 @@ from confluent_kafka import Consumer, KafkaException
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-PERSON_1_IP = "192.168.137.108"
-INFLUX_API_TOKEN = "eQqsK0quoaIUeQFfVYqxTYHq1zBiseK2LCx7o0NX_wc_0Y0vwqk1SeR3svrEWXg8_jH77zRko97I4eEaL-zI7w=="
+PERSON_1_IP = "192.168.137.116"
+INFLUX_API_TOKEN = "RyRYWSVVu5fExDnTwR7_bGtvId9_f33Rg5RMHnzli1v9oWTbUTEWQHmQQU5ORBVSpVwmNF3knH3Y0fEUV3Dg3A=="
 
 INFLUX_URL = f"http://{PERSON_1_IP}:8086"
 INFLUX_ORG = "hackathon_org"
