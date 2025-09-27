@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 from confluent_kafka import Producer
 
-PERSON_1_IP = "192.168.137.108"  # connecting to my friend
+PERSON_1_IP = "192.168.137.116"  # connecting to my friend
 KAFKA_TOPIC = 'iot_sensor_data'
 conf = {'bootstrap.servers': f'{PERSON_1_IP}:9092'}
 
