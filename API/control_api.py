@@ -10,7 +10,7 @@ app = FastAPI(title="Smart Factory Control API")
 def toggle_device(device_id: str, action: str):
     """This endpoint simulates sending a control signal to a device via a GET request."""
     print("---")
-    print(f"✅ CONTROL SIGNAL RECEIVED:")
+    print(f"CONTROL SIGNAL RECEIVED:")
 
     print(f"  -> Device ID: {device_id}")
     print(f"  -> Action:    {action}")
