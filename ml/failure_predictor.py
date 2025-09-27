@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression
 
 
 PERSON_1_IP = "192.168.137.116"
-INFLUX_API_TOKEN = "eQqsK0quoaIUeQFfVYqxTYHq1zBiseK2LCx7o0NX_wc_0Y0vwqk1SeR3svrEWXg8_jH77zRko97I4eEaL-zI7w==" 
+INFLUX_API_TOKEN = "RyRYWSVVu5fExDnTwR7_bGtvId9_f33Rg5RMHnzli1v9oWTbUTEWQHmQQU5ORBVSpVwmNF3knH3Y0fEUV3Dg3A==" 
 INFLUX_URL = f"http://{PERSON_1_IP}:8086"
 INFLUX_ORG = "hackathon_org"
 INFLUX_BUCKET = "iot_bucket"
