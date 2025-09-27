@@ -7,7 +7,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from sklearn.linear_model import LinearRegression
 
 # === CONFIGURATION ===
-PERSON_1_IP = "192.168.137.108"
+PERSON_1_IP = "192.168.137.116"
 INFLUX_API_TOKEN = "eQqsK0quoaIUeQFfVYqxTYHq1zBiseK2LCx7o0NX_wc_0Y0vwqk1SeR3svrEWXg8_jH77zRko97I4eEaL-zI7w==" 
 INFLUX_URL = f"http://{PERSON_1_IP}:8086"
 INFLUX_ORG = "hackathon_org"
