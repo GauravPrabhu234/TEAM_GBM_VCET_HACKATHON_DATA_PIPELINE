@@ -28,62 +28,26 @@ def get_metric_type(device_id):
     else:
         return "Pressure"
 
-# def generate_reading(metric_type):
-#     """
-#     IMPROVED: Generates Normal, Warning, and Critical values:
-#       - Critical: ~5%
-#       - Warning: ~10%
-#       - Normal: ~85%
-#     """
-#     rand_val = random.random()
-#     if rand_val < 0.05:     
-#         state = "Critical"
-#     elif rand_val < 0.15:    
-#         state = "Warning"
-#     else:                    
-#         state = "Normal"
-
-#     if metric_type == "Current":
-#         if state == "Critical":
-#             return random.uniform(20.0, 25.0)
-#         if state == "Warning":
-#             return random.uniform(15.0, 20.0)
-#         return random.uniform(5.0, 15.0)
-
-#     if metric_type == "Temperature":
-#         if state == "Critical":
-#             return random.uniform(100.0, 120.0)
-#         if state == "Warning":
-#             return random.uniform(80.0, 100.0)
-#         return random.uniform(20.0, 80.0)
-
-#     if metric_type == "Pressure":
-#         if state == "Critical":
-#             return random.uniform(300.0, 350.0)
-#         if state == "Warning":
-#             return random.uniform(250.0, 300.0)
-#         return random.uniform(100.0, 250.0)
-
-#     return 0.0
-def generate_reading(metric_type, device_id): # Note the new device_id parameter
+ 
+def generate_reading(metric_type, device_id): 
     """
     IMPROVED: Now generates Normal, Warning, and Critical data,
     and makes DEVICE-075 more likely to be critical.
     """
-    # --- Special logic for our "problem child" device ---
+   
     if device_id == "DEVICE-075" and metric_type == "Temperature":
-        # This device has a 50% chance of being critical, creating a strong trend.
+        
         is_critical = random.random() < 0.5 
         if is_critical:
             return random.uniform(105.0, 115.0)
 
-    # --- Standard logic for all other devices ---
+    
     rand_val = random.random()
-    if rand_val < 0.05: # 5% chance of Critical
+    if rand_val < 0.05: 
         state = "Critical"
-    elif rand_val < 0.15: # 10% chance of Warning
+    elif rand_val < 0.15: 
         state = "Warning"
-    else: # 85% chance of Normal
+    else: 
         state = "Normal"
 
     if metric_type == "Current":
